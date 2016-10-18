@@ -9,30 +9,45 @@ end
 class Relation
   include Enumerable
 
+  attr_reader :params, :target_class
+
+  def initialize(params, target_class)
+    @params = params
+    @target_class = target_class
+  end
+
   def where(params)
-    @params.merge!(params)
+    self.params.merge!(params)
     self
   end
 
   def [](index)
-    @target_class.new(data[index])
+    self.target_class.new(rows[index])
   end
 
   def each(&prc)
-    data.each do |datum|
-      prc.call(@target_class.new(datum))
+    rows.each do |row|
+      prc.call(self.target_class.new(row))
     end
   end
 
-  def initialize(params, target_class)
-    @params = params
-    @data = nil
-    @target_table = target_class.table_name
-    @target_class = target_class
+  def length
+    rows.length
   end
 
-  def params
-    @params
+  def to_a
+    objects ||= rows.map do |row|
+      self.target_class.new(row)
+    end
+  end
+
+
+  private
+
+  attr_accessor :objects
+
+  def rows
+    @rows ||= query_db
   end
 
   def query_db
@@ -40,24 +55,15 @@ class Relation
       "#{attr_name} = ?"
     end.join(" AND ")
 
-    data = DBConnection.execute(<<-SQL, *params.values)
-      SELECT
-        *
-      FROM
-        #{@target_table}
-      WHERE
-        #{where_line}
+    rows = DBConnection.execute(<<-SQL, *params.values)
+    SELECT
+    *
+    FROM
+    #{self.target_class.table_name}
+    WHERE
+    #{where_line}
     SQL
 
-    data
+    rows
   end
-
-  def length
-    query_db.length
-  end
-
-  def data
-    @data ||= query_db
-  end
-
 end
