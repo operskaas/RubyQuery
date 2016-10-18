@@ -3,25 +3,12 @@ require_relative 'searchable'
 require_relative 'associatable'
 require 'active_support/inflector'
 
-class SQLObject
+class SQLite3Model
   extend Searchable
   extend Associatable
 
-  def self.columns
-    unless @columns
-      rows = DBConnection.execute2(<<-SQL)
-        SELECT
-          *
-        FROM
-          #{table_name}
-      SQL
-      @columns = rows.first.map(&:to_sym)
-    end
-    @columns
-  end
-
   def self.finalize!
-    columns.each do |col_name|
+    self.columns.each do |col_name|
       define_method(col_name) do
         attributes[col_name]
       end
@@ -39,56 +26,104 @@ class SQLObject
   def self.table_name
     unless @table_name
       tableized = self.to_s.tableize
-      self.table_name = (tableized)
+      self.table_name = tableized
     end
+
     @table_name
   end
 
   def self.all
-    data = DBConnection.execute(<<-SQL)
+    entries = DBConnection.execute(<<-SQL)
       SELECT
         *
       FROM
         #{table_name}
     SQL
-    self.parse_all(data)
-  end
 
-  def self.parse_all(results)
-    results.map do |result|
-      self.new(result)
-    end
+    self.parse_all(entries)
   end
 
   def self.find(id)
-    data = DBConnection.execute(<<-SQL, id: id)
+    entry = DBConnection.execute(<<-SQL, id)
       SELECT
         *
       FROM
         #{table_name}
       WHERE
-        id = :id
+        id = ?
     SQL
-    return nil if data.empty?
-    self.new(data.first)
+
+    return nil if entry.empty?
+    self.new(entry.first)
   end
 
   def initialize(params = {})
-    params.each do |attr_name, value|
+    params.each do |attr_name, attr_value|
       attr_name = attr_name.to_sym
       unless self.class.columns.include?(attr_name)
         raise "unknown attribute '#{attr_name}'"
       else
-        send(attr_name.to_s + "=", value)
+        send(attr_name.to_s + "=", attr_value)
       end
     end
   end
 
   def attributes
-    unless @attributes
-      @attributes = {}
+    @attributes ||= {}
+  end
+
+  def save
+    id.nil? ? insert : update
+  end
+
+  private
+
+  def self.columns
+    unless @columns
+      rows = DBConnection.execute2(<<-SQL)
+      SELECT
+      *
+      FROM
+      #{table_name}
+      SQL
+      @columns = rows.first.map(&:to_sym)
     end
-    @attributes
+
+    @columns
+  end
+
+  def self.parse_all(entries)
+    entries.map do |entry|
+      self.new(entry)
+    end
+  end
+
+  def insert
+    col_names = self.class.columns.join(", ")
+    question_marks = (["?"] * attribute_values.length).join(", ")
+    DBConnection.execute(<<-SQL, *attribute_values)
+    INSERT INTO
+    #{self.class.table_name} (#{col_names})
+    VALUES
+    (#{question_marks})
+    SQL
+
+    self.id = DBConnection.last_insert_row_id
+  end
+
+  def update
+    set_str = self.class.columns.map do |col_name|
+      "#{col_name} = ?"
+    end.join(", ")
+
+    DBConnection.execute(<<-SQL, *attribute_values, id: id)
+    UPDATE
+    #{self.class.table_name}
+    SET
+    #{set_str}
+    WHERE
+    id = :id
+    SQL
   end
 
   def attribute_values
@@ -97,34 +132,4 @@ class SQLObject
     end
   end
 
-  def insert
-    col_names = self.class.columns.join(", ")
-    question_marks = (["?"] * attribute_values.length).join(", ")
-    DBConnection.execute(<<-SQL, *attribute_values)
-      INSERT INTO
-        #{self.class.table_name} (#{col_names})
-      VALUES
-        (#{question_marks})
-    SQL
-    self.id = DBConnection.last_insert_row_id
-  end
-
-  def update
-    set_line = self.class.columns.map do |col_name|
-      "#{col_name} = ?"
-    end.join(", ")
-
-    DBConnection.execute(<<-SQL, *attribute_values, id: id)
-      UPDATE
-        #{self.class.table_name}
-      SET
-        #{set_line}
-      WHERE
-        id = :id
-    SQL
-  end
-
-  def save
-    id.nil? ? insert : update
-  end
 end

@@ -13,7 +13,7 @@ CREATE TABLE companies (
 
 CREATE TABLE vr_apps (
   id INTEGER PRIMARY KEY,
-  name VARCHAR(255) NOT NULL,
+  name VARCHAR(255) NOT NULL
 );
 
 CREATE TABLE app_compatibilities (
@@ -26,7 +26,7 @@ CREATE TABLE app_compatibilities (
 );
 
 INSERT INTO
-  companies (id, address)
+  companies (id, name)
 VALUES
   (1, "Oculus"),
   (2, "HTC"),
@@ -34,7 +34,7 @@ VALUES
   (4, "Samsung");
 
 INSERT INTO
-  vr_headsets (id, name, company_id)
+  vr_headsets (id, name, manufacturer_id)
 VALUES
   (1, "Rift CV1", 1),
   (2, "Rift DK2", 1),
