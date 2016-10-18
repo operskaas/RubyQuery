@@ -1,9 +1,6 @@
 require 'sqlite3'
 
 PRINT_QUERIES = ENV['PRINT_QUERIES'] == 'true'
-ROOT_FOLDER = File.join(File.dirname(__FILE__), '..')
-VR_SQL_FILE = File.join(ROOT_FOLDER, 'vr.sql')
-VR_DB_FILE = File.join(ROOT_FOLDER, 'vr.db')
 
 class DBConnection
   def self.open(db_file_name)
@@ -14,19 +11,7 @@ class DBConnection
     @db
   end
 
-  def self.reset
-    commands = [
-      "rm '#{VR_DB_FILE}'",
-      "cat '#{VR_SQL_FILE}' | sqlite3 '#{VR_DB_FILE}'"
-    ]
-
-    commands.each { |command| `#{command}` }
-    DBConnection.open(VR_DB_FILE)
-  end
-
   def self.instance
-    reset if @db.nil?
-
     @db
   end
 

@@ -5,6 +5,11 @@ and refer to each other with associations.
 
 ## Usage
 
+In order to use RubyQuery, you must define model classes that inherit from
+`SQLite3Model`, and create a `DBConnection` to your SQLite3 database.
+
+### Inheriting from `SQLite3Model`
+
 To use RubyQuery, you must require `sqlite3_model`, define a class that inherits
 from SQLite3Model, and call `self.finalize!` in the class definition, as such:
 
@@ -27,6 +32,23 @@ before `self.finalize!` in the class definition.
 class Goose < SQLite3Model
   self.table_name = 'geese'
 
+  self.finalize!
+end
+```
+
+### Creating a `DBConnection`
+
+Require `db_connection` in any files that you intend to use RubyQuery, and call
+`#open`, passing in the your database's file name.
+
+A full implementation of RubyQuery will look something like the following:
+```
+require_relative 'db_connection'
+require_relative 'sqlite3_model'
+
+DBConnection.open('my_db.db')
+
+class Dog < SQLite3Model
   self.finalize!
 end
 ```
@@ -119,4 +141,20 @@ method on a `Relation` object will cause the database to be queried. Calling one
 on the same `Relation` object will not yield another query, as it will have cached the return of the query.  
 
 The `Relation` methods `#to_a`, `#[]`, or any `Enumerable` method will return either a single instance,
-or an array of instances, of the `SQLite3Model` as specified by the `target_class`
+or an array of instances, of the `SQLite3Model` as specified by the `target_class`.
+
+For example, `Dog.where({name: 'Fido'}).first` will return a `Dog` object if such a dog exists in the `dogs` table.
+
+## Demonstration
+
+A couple of `SQLite3Model` subclasses have been created in the `vr_models.rb` file in the demo folder.
+
+For a very quick demo, simply run `ruby vr_models.rb` from the demo folder to see the output
+of various API calls.
+
+To play around with it yourself, open a Ruby REPL such as Pry or IRB and require `vr_models.rb`.
+From there, feel free to create new `VRHeadset` objects, play around with associations,
+chaining `where` calls together, etc.
+
+**NB:** In this demonstration, the SQLite3 database is generated in the `vr_models.rb` file,
+but you can create your database however you wish. Just be sure to `::open` the `DBConnection`.

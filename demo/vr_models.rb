@@ -1,5 +1,15 @@
-require_relative 'sqlite3_model'
-require_relative 'db_connection'
+require_relative '../lib/sqlite3_model'
+require_relative '../lib/db_connection'
+
+commands = [
+  "rm './vr.db'",
+  "cat './vr.sql' | sqlite3 './vr.db'"
+]
+# resetting database
+commands.each { |command| `#{command}` }
+
+DBConnection.open('./vr.db')
+
 
 class VRHeadset < SQLite3Model
   self.finalize!
@@ -30,18 +40,17 @@ end
 
 
 if __FILE__ == $PROGRAM_NAME
-  DBConnection.reset
 
   oculus = Company.where({name: 'Oculus'}) # lazy, chainable where method returns a Relation
   p oculus
   oculus = oculus.where({id: 1})
   p oculus
-  oculus = oculus.first
+  oculus = oculus.first # calling first on the Relation returns an actual Company object
   p oculus
   p oculus.vr_headsets.to_a
 
   spt = VRApp.find(1)
   p spt
   p spt.vr_headset
-  p spt.licensor
+  p spt.licensor # demonstrating has_one_through
 end
