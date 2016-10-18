@@ -52,6 +52,10 @@ class Relation
     data
   end
 
+  def length
+    query_db.length
+  end
+
   def data
     @data ||= query_db
   end
