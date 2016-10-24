@@ -149,8 +149,10 @@ For example, `Dog.where({name: 'Fido'}).first` will return a `Dog` object if suc
 
 A couple of `SQLite3Model` subclasses have been created in the `vr_models.rb` file in the demo folder.
 
-For a very quick demo, simply run `ruby vr_models.rb` from the demo folder to see the output
+For a very quick demo, simply run `ruby vr_models.rb` from within the demo folder to see the output
 of various API calls.
+**NB:** You must be in the demo folder to successfully run the above command, otherwise it won't find the .sql file to
+create the test database with.
 
 To play around with it yourself, open a Ruby REPL such as Pry or IRB and require `vr_models.rb`.
 From there, feel free to create new `VRHeadset` objects, play around with associations,
