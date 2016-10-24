@@ -13,7 +13,7 @@ In order to use RubyQuery, you must define model classes that inherit from
 To use RubyQuery, you must require `sqlite3_model`, define a class that inherits
 from SQLite3Model, and call `self.finalize!` in the class definition, as such:
 
-```
+```ruby
 require_relative 'sqlite3_model'
 
 class Dog < SQLite3Model
@@ -28,7 +28,7 @@ I.e. if the `dogs` table has a `name` column, `Dog` now has `#name` and `#name=`
 If the table name is not easily inferred from the model class name, use `self.table_name=`
 before `self.finalize!` in the class definition.
 
-```
+```ruby
 class Goose < SQLite3Model
   self.table_name = 'geese'
 
@@ -42,7 +42,7 @@ Require `db_connection` in any files that you intend to use RubyQuery, and call
 `#open`, passing in the your database's file name.
 
 A full implementation of RubyQuery will look something like the following:
-```
+```ruby
 require_relative 'db_connection'
 require_relative 'sqlite3_model'
 
@@ -64,7 +64,7 @@ options `foreign_key`, `primary_key`, and `class_name`.
 In the example below, `Dog` instances have a method `#owner` that returns an `Owner` object.
 Note that `Owner` must inherit from `SQLite3Model`, and the `dogs` table must have a foreign_key `owner_id`.
 
-```
+```ruby
 class Dog < SQLite3Model
   self.finalize!
 
@@ -78,7 +78,7 @@ end
 In the example above, the options passed to `belongs_to` could have been omitted, since
 in this case they are all easily derived from the first argument.
 The following would be equivalent:
-```
+```ruby
 class Dog < SQLite3Model
   self.finalize!
 
@@ -89,7 +89,7 @@ end
 
 Similarly, `has_many` will return an array of objects of type `class_name`.
 
-```
+```ruby
 class Owner < SQLite3Model
   self.finalize!
 
@@ -110,7 +110,7 @@ association can be written that allows an instance of `Toy` to directly access i
 writing `toy.dog.owner`. The arguments to `has_one_through` are the name of the association you wish
 to create, the name of the association you are going 'through', and the name of your source association.
 
-```
+```ruby
 class Toy < SQLite3Model
   self.finalize!
 
