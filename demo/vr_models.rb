@@ -1,10 +1,8 @@
 require_relative '../lib/sqlite3_model'
 require_relative '../lib/db_connection'
+commands = ["cat './vr.sql' | sqlite3 './vr.db'"]
+commands.unshift("rm './vr.db'") if File.file?('./vr.db')
 
-commands = [
-  "rm './vr.db'",
-  "cat './vr.sql' | sqlite3 './vr.db'"
-]
 # resetting database
 commands.each { |command| `#{command}` }
 
